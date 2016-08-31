@@ -22,7 +22,7 @@ Given the initial and goal configurations of the wheelchair, as well as a map of
 ### Input and Output format
 **Format of a configuration:** A configuration is represented by n real numbers, where n is the dimension of the C-space. Each number is separated by a white space. The first two numbers are the position of the origin of the chair’s coordinate system in the workspace. If the wheelchair does not have a gripper, the last n-2 numbers are the joint angles in sequential order (i.e., the third number is the joint angle of joint-1, the fourth number is the joint angle of joint-2, etc.). Each joint angle is defined in radian. If the wheelchair has a gripper, the subsequent n-6 numbers are the joint angles in sequential order, while the last 4 numbers are the values of u<sub>1</sub>, u<sub>2</sub>, l<sub>1</sub>, l<sub>2</sub>, respectively.
 
-**Input format.** The program you develop should accept an input file. The file contains the type of wheelchair, the initial and goal configurations, and the obstacles position and dimension. The format of the input file is as follows.
+**Input.** The program accept an input file. The file contains the type of wheelchair, the initial and goal configurations, and the obstacles position and dimension. The format of the input file is as follows.
 
 1. The file consists of k + 4 lines, where k is the number of obstacles in the environment.
 2. The first line is the type of wheelchair. There is only two possibilities, i.e., withGripper and noGripper for a wheelchair with a gripper and that without a gripper, respectively.
@@ -31,9 +31,9 @@ Given the initial and goal configurations of the wheelchair, as well as a map of
 5. The fourth line is the number of obstacles in the environment.
 6. Each line in the next k lines represents an obstacle and consists of 4 real numbers. The first two numbers represent the X and Y position of the upper-left vertex of the rectangle, while the last two represent the X and Y position of the lower-right vertex of the rectangle.
 
-**Output format.** Your program should output the path to a file with the following format.
+**Output.** The program outputs the path to a file with the following format.
 
-1. The file consists of m+2 lines, where m is the number of primitive steps in your path.
+1. The file consists of m+2 lines, where m is the number of primitive steps in the path.
 2. The first line is the number of line-segments.
 3. The second line is the initial configuration.
 4. The next m lines are the end configuration of each primitive step.
