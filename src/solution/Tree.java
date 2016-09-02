@@ -27,6 +27,10 @@ public class Tree<T> {
 		tree.add(node);
 	}
 	
+	public Node<T> get(int index) {
+		return tree.get(index);
+	}
+	
 	public boolean isEmpty() {
 		return tree.isEmpty();
 	}

@@ -45,6 +45,7 @@ public class ArmConfig {
 		this.jointAngles = new ArrayList<Double>(jointAngles);
 		this.gripper = false;
 		generateLinks();
+		generateChair(); // User-added
 	}
 
 	/**
