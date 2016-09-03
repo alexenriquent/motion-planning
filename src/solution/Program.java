@@ -15,18 +15,25 @@ public class Program {
 		
 		problem.loadProblem(args[0]);
 
+		double start = System.nanoTime();
+		
+		double s1 = System.nanoTime();
 		List<ArmConfig> path = RRT.search(problem);
+		double f1 = System.nanoTime();
+		double e1 = (f1 - s1) / 1000000;
 		
-		for (ArmConfig t : path) {
-			System.out.println(t);
-		}
-				
+		double s2 = System.nanoTime();
 		List<ArmConfig> interpolatedPath = RRT.interpolate(problem, path);
+		double f2 = System.nanoTime();
+		double e2 = (f2 - s2) / 1000000;
 		
-		for (ArmConfig t : interpolatedPath) {
-			System.out.println(t);
-		}
+		double finish = System.nanoTime();
+		double elapsed = (finish - start) / 1000000;
 		
+		System.out.println("Total: " + elapsed);
+		System.out.println("Search: " + e1);
+		System.out.println("Interpolation: " + e2);
+						
 		problem.setPath(interpolatedPath);
 		problem.saveSolution(args[1]);
 	}

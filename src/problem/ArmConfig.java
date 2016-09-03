@@ -360,19 +360,4 @@ public class ArmConfig {
         chair.add(new Line2D.Double(x1 + halfWidth, y1 - halfWidth, x1 - halfWidth, y1 - halfWidth));
         chair.add(new Line2D.Double(x1 - halfWidth, y1 - halfWidth, x1 - halfWidth, y1 + halfWidth));
     }
-	
-//	public void incrementBase(double x, double y) {
-//		this.base = new Point2D.Double(this.base.getX() + x, this.base.getY() + y);
-//	}
-//	
-//	public void incrementJoint(List<Double> angles) {
-//		List<Double> jointAngles = new ArrayList<Double>();
-//		
-//		for (int i = 0; i < this.getJointCount(); i++) {
-//			jointAngles.add(this.jointAngles.get(i) + angles.get(i));
-//		}
-//		
-//		this.jointAngles = new ArrayList<Double>(jointAngles);
-//		generateLinks();
-//	}
 }

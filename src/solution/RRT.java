@@ -16,6 +16,7 @@ public class RRT {
 	public static double MAX_ERROR = 1e-5;
 	public static final int MAX_SAMPLE = 50;
 	public static final double INTERPOLATION = 3000.0;
+	public static final double TRIAL_INTERPOLATION = 300.0;
 	public static final double MAX_JOINT_ANGLE = 150 * Math.PI / 180;
 	public static final double MAX_JOINT_STEP = 0.1 * Math.PI / 180.0;
 	public static final double MAX_BASE_STEP = 0.001;
@@ -37,17 +38,25 @@ public class RRT {
 				
 		tree.add(new Node<ArmConfig>(null, problem.getInitialState()));
 		
+		double c = 0;
+		
 		while (true) {
 			Node<ArmConfig> parent = adjacent(tree, problem.getGoalState());
-			if (!collision(parent.getData(), problem.getGoalState(), obstacles)) {
+			if (!collision(parent.getData(), problem.getGoalState(), problem)) {
+				
 				Node<ArmConfig> goal = new Node<ArmConfig>(parent, problem.getGoalState());
 				tree.add(goal);
+				System.out.println("Trial: " + c);
 				return path(goal);
 			}
 			for (int i = 0; i < MAX_SAMPLE; i++) {
 				ArmConfig cfg = getValidSample(problem);
 				parent = adjacent(tree, cfg);
+				double s1 = System.nanoTime();
 				List<ArmConfig> path = primitiveSteps(problem, parent.getData(), cfg);
+				double f1 = System.nanoTime();
+				double e1 = (f1 - s1) / 1000000;
+				c += e1;
 				if (!lineCollision(parent.getData(), cfg, obstacles) && 
 					!pathHasCollision(problem, path)) {
 					tree.add(new Node<ArmConfig>(parent, cfg));
@@ -73,14 +82,15 @@ public class RRT {
 		return node;
 	}
 	
-	public boolean collision(ArmConfig cfg1, ArmConfig cfg2, List<Obstacle> obstacles) {
+	public boolean collision(ArmConfig cfg1, ArmConfig cfg2, ProblemSpec problem) {
 		int jointCount = cfg1.getJointCount();
 		Point2D base1 = cfg1.getLinks().get(jointCount - 1).getP1();
 		Point2D base2 = cfg2.getLinks().get(jointCount - 1).getP1();
 		Line2D line1 = new Line2D.Double(cfg1.getBaseCenter(), cfg2.getBaseCenter());
 		Line2D line2 = new Line2D.Double(base1, base2);
+		List<ArmConfig> path = primitiveSteps(problem, cfg1, cfg2);
 		
-		for (Obstacle obstacle : obstacles) {
+		for (Obstacle obstacle : problem.getObstacles()) {
 			Rectangle2D lenientRect = grow(obstacle.getRect(), -MAX_ERROR);
 			if (line1.intersects(lenientRect) ||
 				line2.intersects(lenientRect) ||
@@ -88,6 +98,11 @@ public class RRT {
 				return true;
 			}
 		}
+		
+		if (pathHasCollision(problem, path)) {
+			return true;
+		}
+		
 		return false;
 	}
 	
@@ -100,6 +115,7 @@ public class RRT {
 				return true;
 			}
 		}
+		
 		return false;
 	}
 	
@@ -140,7 +156,8 @@ public class RRT {
 		}
 		List<Line2D> links = cfg.getLinks();
 		for (Line2D link : links) {
-			if (!lenientBounds.contains(link.getP2())) {
+			if (!lenientBounds.contains(link.getP2()) ||
+				(!link.intersects(lenientBounds))) {
 				return false;
 			}
 		}
@@ -183,7 +200,7 @@ public class RRT {
 	
 	public boolean pathHasCollision(ProblemSpec problem, List<ArmConfig> path) {
 		for (ArmConfig step : path) {
-			if (hasCollision(step, problem.getObstacles()) || !fitsBounds(step)) {
+			if (!validSample(problem, step)) {
 				return true;
 			}
 		}
@@ -266,13 +283,13 @@ public class RRT {
 			primitiveLengths = new ArrayList<Double>(cfg1.getGripperLengths());
 		}
 		
-		double x = (cfg2.getBaseCenter().getX() - cfg1.getBaseCenter().getX()) / INTERPOLATION;
-		double y = (cfg2.getBaseCenter().getY() - cfg1.getBaseCenter().getY()) / INTERPOLATION;
+		double x = (cfg2.getBaseCenter().getX() - cfg1.getBaseCenter().getX()) / TRIAL_INTERPOLATION;
+		double y = (cfg2.getBaseCenter().getY() - cfg1.getBaseCenter().getY()) / TRIAL_INTERPOLATION;
 		
 		List<Double> jointAngles = new ArrayList<Double>();
 		for (int i = 0; i < cfg1.getJointCount(); i++) {
 			double angle = (cfg2.getJointAngles().get(i)
-					     - cfg1.getJointAngles().get(i)) / INTERPOLATION;
+					     - cfg1.getJointAngles().get(i)) / TRIAL_INTERPOLATION;
 			jointAngles.add(angle);
 		}
 		
@@ -280,18 +297,18 @@ public class RRT {
 		if (problem.hasGripper()) {
 			for (int i = 0; i < cfg1.getGripperLengths().size(); i++) {
 				double length = (cfg2.getGripperLengths().get(i)
-							  - cfg1.getGripperLengths().get(i)) / INTERPOLATION;
+							  - cfg1.getGripperLengths().get(i)) / TRIAL_INTERPOLATION;
 				gripperLengths.add(length);
 			}
 		}
 		
-		for (int i = 0; i < INTERPOLATION; i++) {
+		for (int i = 0; i < TRIAL_INTERPOLATION; i++) {
 			primitiveX += x;
 			primitiveY += y;
 			Point2D base = new Point2D.Double(primitiveX, primitiveY);
 			
-			for (int k = 0; k < primitiveAngles.size(); k++) {
-				primitiveAngles.set(k, primitiveAngles.get(k) + jointAngles.get(k));
+			for (int j = 0; j < primitiveAngles.size(); j++) {
+				primitiveAngles.set(j, primitiveAngles.get(j) + jointAngles.get(j));
 			}
 			
 			if (problem.hasGripper()) {
@@ -299,15 +316,15 @@ public class RRT {
 					primitiveLengths.set(j, primitiveLengths.get(j) + gripperLengths.get(j));
 				}
 				ArmConfig primitive = new ArmConfig(base, primitiveAngles, primitiveLengths);
-					primitivePath.add(primitive);
+				primitivePath.add(primitive);
 			} else {
 				ArmConfig primitive = new ArmConfig(base, primitiveAngles);
-					primitivePath.add(primitive);
+				primitivePath.add(primitive);
 			}
 		}
 		
 		if (problem.hasGripper()) {
-			primitivePath.add(new ArmConfig(cfg1.getBaseCenter(), 
+			primitivePath.add(new ArmConfig(cfg2.getBaseCenter(), 
 							cfg2.getJointAngles(),
 							cfg2.getGripperLengths()));
 		} else {
