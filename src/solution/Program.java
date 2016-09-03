@@ -14,14 +14,20 @@ public class Program {
 		RRT RRT = new RRT();
 		
 		problem.loadProblem(args[0]);
-		
+
 		List<ArmConfig> path = RRT.search(problem);
 		
 		for (ArmConfig t : path) {
 			System.out.println(t);
 		}
+				
+		List<ArmConfig> interpolatedPath = RRT.interpolate(problem, path);
 		
-		problem.setPath(path);
+		for (ArmConfig t : interpolatedPath) {
+			System.out.println(t);
+		}
+		
+		problem.setPath(interpolatedPath);
 		problem.saveSolution(args[1]);
 	}
 }

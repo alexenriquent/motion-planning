@@ -285,4 +285,8 @@ public class ProblemSpec {
 	public boolean solutionLoaded() {
 		return solutionLoaded;
 	}
+	
+	public boolean hasGripper() {
+		return gripper;
+	}
 }
