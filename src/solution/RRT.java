@@ -55,7 +55,7 @@ public class RRT {
 				double s1 = System.nanoTime();
 				List<ArmConfig> path = primitiveSteps(problem, parent.getData(), cfg);
 				double f1 = System.nanoTime();
-				double e1 = (f1 - s1) / 1000000;
+				double e1 = (f1 - s1) / 10e5;
 				c += e1;
 				if (!lineCollision(parent.getData(), cfg, obstacles) && 
 					!pathHasCollision(problem, path)) {
