@@ -14,10 +14,10 @@ import problem.ProblemSpec;
 public class RRT {
 
 	public static double MAX_ERROR = 1e-5;
-	public static final int MAX_SAMPLE = 50;
+	public static final int MAX_VERTICES = 50;
 	public static final double INTERPOLATION = 3000.0;
 	public static final double TRIAL_INTERPOLATION = 50.0;
-	public static final double MAX_JOINT_ANGLE = 150 * Math.PI / 180;
+	public static final double MAX_JOINT_ANGLE = 150 * Math.PI / 180.0;
 	public static final double MAX_JOINT_STEP = 0.1 * Math.PI / 180.0;
 	public static final double MAX_BASE_STEP = 0.001;
 	public static final double MAX_GRIPPER_STEP = 0.001;
@@ -35,26 +35,19 @@ public class RRT {
 	public List<ArmConfig> search(ProblemSpec problem) {
 		Tree<ArmConfig> tree = new Tree<ArmConfig>();	
 		tree.add(new Node<ArmConfig>(null, problem.getInitialState()));
-		
-		double c = 0;
-		
+						
 		while (true) {
 			Node<ArmConfig> parent = adjacent(tree, problem.getGoalState());
 			if (!collision(parent.getData(), problem.getGoalState(), problem)) {
 				Node<ArmConfig> goal = new Node<ArmConfig>(parent, problem.getGoalState());
 				tree.add(goal);
-				System.out.println("Trial: " + c);
 				return path(goal);
 			}
-			for (int i = 0; i < MAX_SAMPLE; i++) {
+			for (int i = 0; i < MAX_VERTICES; i++) {
 				ArmConfig cfg = getValidSample(problem);
 				parent = adjacent(tree, cfg);
-				double s1 = System.nanoTime();
-				List<ArmConfig> path = primitiveSteps(problem, parent.getData(), cfg);
-				double f1 = System.nanoTime();
-				double e1 = (f1 - s1) / 10e5;
-				c += e1;
-				if (!lineCollision(parent.getData(), cfg, problem.getObstacles()) && 
+				List<ArmConfig> path = trial(problem, parent.getData(), cfg);
+				if (!lineCollision(parent.getData(), cfg, problem) && 
 					!pathHasCollision(problem, path)) {
 					tree.add(new Node<ArmConfig>(parent, cfg));
 				}
@@ -80,12 +73,11 @@ public class RRT {
 	}
 	
 	private boolean collision(ArmConfig cfg1, ArmConfig cfg2, ProblemSpec problem) {
-		int jointCount = cfg1.getJointCount();
-		Point2D base1 = cfg1.getLinks().get(jointCount - 1).getP1();
-		Point2D base2 = cfg2.getLinks().get(jointCount - 1).getP1();
+		Point2D linkBase1 = cfg1.getLinks().get(cfg1.getJointCount() - 1).getP1();
+		Point2D linkBase2 = cfg2.getLinks().get(cfg1.getJointCount() - 1).getP1();
 		Line2D line1 = new Line2D.Double(cfg1.getBaseCenter(), cfg2.getBaseCenter());
-		Line2D line2 = new Line2D.Double(base1, base2);
-		List<ArmConfig> path = primitiveSteps(problem, cfg1, cfg2);
+		Line2D line2 = new Line2D.Double(linkBase1, linkBase2);
+		List<ArmConfig> path = trial(problem, cfg1, cfg2);
 		
 		for (Obstacle obstacle : problem.getObstacles()) {
 			Rectangle2D lenientRect = grow(obstacle.getRect(), -MAX_ERROR);
@@ -103,10 +95,10 @@ public class RRT {
 		return false;
 	}
 	
-	private boolean lineCollision(ArmConfig cfg1, ArmConfig cfg2, List<Obstacle> obstacles) {
+	private boolean lineCollision(ArmConfig cfg1, ArmConfig cfg2, ProblemSpec problem) {
 		Line2D line = new Line2D.Double(cfg1.getBaseCenter(), cfg2.getBaseCenter());
 		
-		for (Obstacle obstacle : obstacles) {
+		for (Obstacle obstacle : problem.getObstacles()) {
 			Rectangle2D lenientRect = grow(obstacle.getRect(), -MAX_ERROR);
 			if (line.intersects(lenientRect)) {
 				return true;
@@ -260,7 +252,7 @@ public class RRT {
 		return path;
 	}
 	
-	private List<ArmConfig> primitiveSteps(ProblemSpec problem, ArmConfig cfg1, ArmConfig cfg2) {
+	private List<ArmConfig> trial(ProblemSpec problem, ArmConfig cfg1, ArmConfig cfg2) {
 		List<ArmConfig> primitivePath = new ArrayList<ArmConfig>();
 		
 		if (problem.hasGripper()) {
@@ -331,7 +323,7 @@ public class RRT {
 		return primitivePath;
 	}
 	
-	public List<ArmConfig> interpolate(ProblemSpec problem, List<ArmConfig> path) {
+	public List<ArmConfig> primitiveSteps(ProblemSpec problem, List<ArmConfig> path) {
 		List<ArmConfig> primitivePath = new ArrayList<ArmConfig>();
 		
 		for (int i = 0; i < path.size() - 1; i++) {
