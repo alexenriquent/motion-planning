@@ -16,7 +16,7 @@ public class RRT {
 	public static double MAX_ERROR = 1e-5;
 	public static final int MAX_SAMPLE = 50;
 	public static final double INTERPOLATION = 3000.0;
-	public static final double TRIAL_INTERPOLATION = 300.0;
+	public static final double TRIAL_INTERPOLATION = 50.0;
 	public static final double MAX_JOINT_ANGLE = 150 * Math.PI / 180;
 	public static final double MAX_JOINT_STEP = 0.1 * Math.PI / 180.0;
 	public static final double MAX_BASE_STEP = 0.001;
@@ -33,9 +33,7 @@ public class RRT {
 	}
 	
 	public List<ArmConfig> search(ProblemSpec problem) {
-		List<Obstacle> obstacles = problem.getObstacles();
-		Tree<ArmConfig> tree = new Tree<ArmConfig>();
-				
+		Tree<ArmConfig> tree = new Tree<ArmConfig>();	
 		tree.add(new Node<ArmConfig>(null, problem.getInitialState()));
 		
 		double c = 0;
@@ -43,7 +41,6 @@ public class RRT {
 		while (true) {
 			Node<ArmConfig> parent = adjacent(tree, problem.getGoalState());
 			if (!collision(parent.getData(), problem.getGoalState(), problem)) {
-				
 				Node<ArmConfig> goal = new Node<ArmConfig>(parent, problem.getGoalState());
 				tree.add(goal);
 				System.out.println("Trial: " + c);
@@ -57,7 +54,7 @@ public class RRT {
 				double f1 = System.nanoTime();
 				double e1 = (f1 - s1) / 10e5;
 				c += e1;
-				if (!lineCollision(parent.getData(), cfg, obstacles) && 
+				if (!lineCollision(parent.getData(), cfg, problem.getObstacles()) && 
 					!pathHasCollision(problem, path)) {
 					tree.add(new Node<ArmConfig>(parent, cfg));
 				}
@@ -82,7 +79,7 @@ public class RRT {
 		return node;
 	}
 	
-	public boolean collision(ArmConfig cfg1, ArmConfig cfg2, ProblemSpec problem) {
+	private boolean collision(ArmConfig cfg1, ArmConfig cfg2, ProblemSpec problem) {
 		int jointCount = cfg1.getJointCount();
 		Point2D base1 = cfg1.getLinks().get(jointCount - 1).getP1();
 		Point2D base2 = cfg2.getLinks().get(jointCount - 1).getP1();
@@ -106,7 +103,7 @@ public class RRT {
 		return false;
 	}
 	
-	public boolean lineCollision(ArmConfig cfg1, ArmConfig cfg2, List<Obstacle> obstacles) {
+	private boolean lineCollision(ArmConfig cfg1, ArmConfig cfg2, List<Obstacle> obstacles) {
 		Line2D line = new Line2D.Double(cfg1.getBaseCenter(), cfg2.getBaseCenter());
 		
 		for (Obstacle obstacle : obstacles) {
@@ -119,7 +116,7 @@ public class RRT {
 		return false;
 	}
 	
-	public boolean hasCollision(ArmConfig cfg, List<Obstacle> obstacles) {
+	private boolean hasCollision(ArmConfig cfg, List<Obstacle> obstacles) {
 		for (Obstacle o : obstacles) {
 			if (hasCollision(cfg, o)) {
 				return true;
@@ -128,7 +125,7 @@ public class RRT {
 		return false;
 	}
 	
-	public boolean hasCollision(ArmConfig cfg, Obstacle o) {
+	private boolean hasCollision(ArmConfig cfg, Obstacle o) {
 		Rectangle2D lenientRect = grow(o.getRect(), MAX_ERROR);
 		List<Line2D> links = cfg.getLinks();
 		for (Line2D link : links) {
@@ -145,12 +142,12 @@ public class RRT {
 		return false;
 	}
 
-	public Rectangle2D grow(Rectangle2D rect, double delta) {
+	private Rectangle2D grow(Rectangle2D rect, double delta) {
 		return new Rectangle2D.Double(rect.getX() - delta, rect.getY() - delta,
 				rect.getWidth() + delta * 2, rect.getHeight() + delta * 2);
 	}
 	
-	public boolean fitsBounds(ArmConfig cfg) {
+	private boolean fitsBounds(ArmConfig cfg) {
 		if (!lenientBounds.contains(cfg.getBaseCenter())) {
 			return false;
 		}
@@ -170,7 +167,7 @@ public class RRT {
 		return true;
 	}
 	
-	public boolean hasSelfCollision(ArmConfig cfg) {
+	private boolean hasSelfCollision(ArmConfig cfg) {
 		List<Line2D> links = cfg.getLinks();
 		List<Line2D> chair = cfg.getChair();
 		for (int i = 0; i < links.size(); i++) {
@@ -198,7 +195,7 @@ public class RRT {
 		return false;
 	}
 	
-	public boolean pathHasCollision(ProblemSpec problem, List<ArmConfig> path) {
+	private boolean pathHasCollision(ProblemSpec problem, List<ArmConfig> path) {
 		for (ArmConfig step : path) {
 			if (!validSample(problem, step)) {
 				return true;
@@ -207,11 +204,11 @@ public class RRT {
 		return false;
 	}
 	
-	public Point2D generateSample() {
+	private Point2D generateSample() {
 		return new Point2D.Double(Math.random(), Math.random());
 	}
 	
-	public boolean validSample(ProblemSpec problem, ArmConfig cfg) {
+	private boolean validSample(ProblemSpec problem, ArmConfig cfg) {
 		if (fitsBounds(cfg) && !hasSelfCollision(cfg) &&
 			!hasCollision(cfg, problem.getObstacles())) {
 			return true;
@@ -219,7 +216,7 @@ public class RRT {
 		return false;
 	}
 	
-	public ArmConfig getSample(ProblemSpec problem) {
+	private ArmConfig getSample(ProblemSpec problem) {
 		List<Double> joints = new ArrayList<Double>();
 		
 		for (int i = 0; i < problem.getJointCount(); i++) {
@@ -238,7 +235,7 @@ public class RRT {
 		return new ArmConfig(generateSample(), joints);
 	}
 	
-	public ArmConfig getValidSample(ProblemSpec problem) {
+	private ArmConfig getValidSample(ProblemSpec problem) {
 		while (true) {
 			ArmConfig cfg = getSample(problem);
 			if (validSample(problem, cfg)) {
@@ -247,7 +244,7 @@ public class RRT {
 		}
 	}
 	
-	public List<ArmConfig> path(Node<ArmConfig> goal) {
+	private List<ArmConfig> path(Node<ArmConfig> goal) {
 		List<ArmConfig> path = new ArrayList<ArmConfig>();
 		Node<ArmConfig> node = goal;
 		path.add(node.getData());
@@ -263,7 +260,7 @@ public class RRT {
 		return path;
 	}
 	
-	public List<ArmConfig> primitiveSteps(ProblemSpec problem, ArmConfig cfg1, ArmConfig cfg2) {
+	private List<ArmConfig> primitiveSteps(ProblemSpec problem, ArmConfig cfg1, ArmConfig cfg2) {
 		List<ArmConfig> primitivePath = new ArrayList<ArmConfig>();
 		
 		if (problem.hasGripper()) {

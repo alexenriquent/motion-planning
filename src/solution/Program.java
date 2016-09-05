@@ -14,7 +14,7 @@ public class Program {
 		RRT RRT = new RRT();
 		
 		problem.loadProblem(args[0]);
-
+		
 		double start = System.nanoTime();
 		
 		double s1 = System.nanoTime();

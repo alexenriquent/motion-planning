@@ -360,4 +360,10 @@ public class ArmConfig {
         chair.add(new Line2D.Double(x1 + halfWidth, y1 - halfWidth, x1 - halfWidth, y1 - halfWidth));
         chair.add(new Line2D.Double(x1 - halfWidth, y1 - halfWidth, x1 - halfWidth, y1 + halfWidth));
     }
+	
+	@Override
+	public boolean equals(Object obj) {
+		ArmConfig other = (ArmConfig) obj;
+		return this.base.equals(other.getBaseCenter());
+	}
 }
