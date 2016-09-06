@@ -61,8 +61,8 @@ public class RRT {
 		double adjacentDistance = 0.0;
 		double distance = Double.POSITIVE_INFINITY;
 		
-		for (int i = 0; i < tree.size(); i++) {
-			adjacent = tree.get(i);
+		for (Node<ArmConfig> neighbour : tree.getTree()) {
+			adjacent = neighbour;
 			adjacentDistance = base.distanceSq(adjacent.getData().getBaseCenter());
 			if (adjacentDistance < distance) {
 				node = adjacent;
