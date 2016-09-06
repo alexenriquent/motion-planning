@@ -73,11 +73,11 @@ public class RRT {
 	}
 	
 	private boolean collision(ArmConfig cfg1, ArmConfig cfg2, ProblemSpec problem) {
-		Point2D linkBase1 = cfg1.getLinks().get(cfg1.getJointCount() - 1).getP1();
-		Point2D linkBase2 = cfg2.getLinks().get(cfg1.getJointCount() - 1).getP1();
-		Line2D line1 = new Line2D.Double(cfg1.getBaseCenter(), cfg2.getBaseCenter());
-		Line2D line2 = new Line2D.Double(linkBase1, linkBase2);
 		List<ArmConfig> path = trial(problem, cfg1, cfg2);
+		Line2D line1 = new Line2D.Double(cfg1.getBaseCenter(), cfg2.getBaseCenter());
+		Line2D line2 = new Line2D.Double(
+			   cfg1.getLinks().get(cfg1.getJointCount() - 1).getP1(), 
+			   cfg2.getLinks().get(cfg1.getJointCount() - 1).getP1());
 		
 		for (Obstacle obstacle : problem.getObstacles()) {
 			Rectangle2D lenientRect = grow(obstacle.getRect(), -MAX_ERROR);
@@ -163,8 +163,8 @@ public class RRT {
 		List<Line2D> links = cfg.getLinks();
 		List<Line2D> chair = cfg.getChair();
 		for (int i = 0; i < links.size(); i++) {
-			if (links.size()-i <= 4) {
-			    for (int j = 0; j < links.size()-5; j++) {
+			if (links.size() - i <= 4) {
+			    for (int j = 0; j < links.size() - 5; j++) {
                     if (links.get(i).intersectsLine(links.get(j))) {
                         return true;
                     }

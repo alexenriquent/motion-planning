@@ -18,7 +18,6 @@ public class Program {
 		double start = System.nanoTime();
 		
 		List<ArmConfig> path = RRT.search(problem);
-		
 		List<ArmConfig> interpolatedPath = RRT.primitiveSteps(problem, path);
 		
 		double finish = System.nanoTime();
