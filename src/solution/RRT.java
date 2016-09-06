@@ -13,8 +13,9 @@ import problem.ProblemSpec;
 
 public class RRT {
 
-	public static double MAX_ERROR = 1e-5;
+	public static final int MAX_GRIPPERS = 4;
 	public static final int MAX_VERTICES = 50;
+	public static final double MAX_ERROR = 1e-5;
 	public static final double INTERPOLATION = 3000.0;
 	public static final double TRIAL_INTERPOLATION = 50.0;
 	public static final double MAX_JOINT_ANGLE = 150 * Math.PI / 180.0;
@@ -23,7 +24,6 @@ public class RRT {
 	public static final double MAX_GRIPPER_STEP = 0.001;
 	public static final double MIN_GRIPPER_LENGTH = 0.03;
 	public static final double MAX_GRIPPER_LENGTH = 0.07;
-	public static final int MAX_GRIPPERS = 4;
 	public static final Rectangle2D BOUNDS = new Rectangle2D.Double(0, 0, 1, 1);
 	
 	private Rectangle2D lenientBounds;
@@ -38,16 +38,15 @@ public class RRT {
 						
 		while (true) {
 			Node<ArmConfig> parent = adjacent(tree, problem.getGoalState());
-			if (!collision(parent.getData(), problem.getGoalState(), problem)) {
-				Node<ArmConfig> goal = new Node<ArmConfig>(parent, problem.getGoalState());
-				tree.add(goal);
-				return path(goal);
+			if (!collision(problem, parent.getData(), problem.getGoalState())) {
+				tree.add(new Node<ArmConfig>(parent, problem.getGoalState()));
+				return path(tree.get(tree.size() - 1));
 			}
 			for (int i = 0; i < MAX_VERTICES; i++) {
 				ArmConfig cfg = getValidSample(problem);
 				parent = adjacent(tree, cfg);
 				List<ArmConfig> path = trial(problem, parent.getData(), cfg);
-				if (!lineCollision(parent.getData(), cfg, problem) && 
+				if (!lineCollision(problem, parent.getData(), cfg) && 
 					!pathHasCollision(problem, path)) {
 					tree.add(new Node<ArmConfig>(parent, cfg));
 				}
@@ -72,7 +71,7 @@ public class RRT {
 		return node;
 	}
 	
-	private boolean collision(ArmConfig cfg1, ArmConfig cfg2, ProblemSpec problem) {
+	private boolean collision(ProblemSpec problem, ArmConfig cfg1, ArmConfig cfg2) {
 		List<ArmConfig> path = trial(problem, cfg1, cfg2);
 		Line2D line1 = new Line2D.Double(cfg1.getBaseCenter(), cfg2.getBaseCenter());
 		Line2D line2 = new Line2D.Double(
@@ -95,7 +94,7 @@ public class RRT {
 		return false;
 	}
 	
-	private boolean lineCollision(ArmConfig cfg1, ArmConfig cfg2, ProblemSpec problem) {
+	private boolean lineCollision(ProblemSpec problem, ArmConfig cfg1, ArmConfig cfg2) {
 		Line2D line = new Line2D.Double(cfg1.getBaseCenter(), cfg2.getBaseCenter());
 		
 		for (Obstacle obstacle : problem.getObstacles()) {
