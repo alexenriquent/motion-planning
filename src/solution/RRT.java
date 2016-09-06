@@ -56,7 +56,8 @@ public class RRT {
 	
 	private Node<ArmConfig> adjacent(Tree<ArmConfig> tree, ArmConfig cfg) {
 		Point2D base = cfg.getBaseCenter();
-		Node<ArmConfig> adjacent, node = null;
+		Node<ArmConfig> node = null;
+		Node<ArmConfig> adjacent = null;
 		double adjacentDistance = 0.0;
 		double distance = Double.POSITIVE_INFINITY;
 		
@@ -222,7 +223,6 @@ public class RRT {
 			}
 			return new ArmConfig(generateSample(), joints, lengths);
 		}
-		
 		return new ArmConfig(generateSample(), joints);
 	}
 	
