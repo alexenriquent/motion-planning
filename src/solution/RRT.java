@@ -17,7 +17,7 @@ public class RRT {
 	public static final int MAX_VERTICES = 50;
 	public static final double MAX_ERROR = 1e-5;
 	public static final double INTERPOLATION = 3000.0;
-	public static final double TRIAL_INTERPOLATION = 50.0;
+	public static final double TRIAL_INTERPOLATION = 60.0;
 	public static final double MAX_JOINT_ANGLE = 150 * Math.PI / 180.0;
 	public static final double MAX_JOINT_STEP = 0.1 * Math.PI / 180.0;
 	public static final double MAX_BASE_STEP = 0.001;
@@ -32,23 +32,59 @@ public class RRT {
 		lenientBounds = grow(BOUNDS, MAX_ERROR);
 	}
 	
+//	public List<ArmConfig> search(ProblemSpec problem) {
+//		Tree<ArmConfig> tree = new Tree<ArmConfig>();	
+//		tree.add(new Node<ArmConfig>(null, problem.getInitialState()));
+//						
+//		while (true) {
+//			Node<ArmConfig> parent = adjacent(tree, problem.getGoalState());
+//			if (!collision(problem, parent.getData(), problem.getGoalState())) {
+//				tree.add(new Node<ArmConfig>(parent, problem.getGoalState()));
+//				return path(tree.get(tree.size() - 1));
+//			}
+//			for (int i = 0; i < MAX_VERTICES; i++) {
+//				ArmConfig cfg = getValidSample(problem);
+//				parent = adjacent(tree, cfg);
+//				List<ArmConfig> path = trial(problem, parent.getData(), cfg);
+//				if (!lineCollision(problem, parent.getData(), cfg) && 
+//					!pathHasCollision(problem, path)) {
+//					tree.add(new Node<ArmConfig>(parent, cfg));
+//				}
+//			}
+//		}		
+//	}
+	
 	public List<ArmConfig> search(ProblemSpec problem) {
-		Tree<ArmConfig> tree = new Tree<ArmConfig>();	
-		tree.add(new Node<ArmConfig>(null, problem.getInitialState()));
+		Tree<ArmConfig> tree1 = new Tree<ArmConfig>();	
+		tree1.add(new Node<ArmConfig>(null, problem.getInitialState()));
+		Tree<ArmConfig> tree2 = new Tree<ArmConfig>();	
+		tree2.add(new Node<ArmConfig>(null, problem.getGoalState()));
 						
 		while (true) {
-			Node<ArmConfig> parent = adjacent(tree, problem.getGoalState());
-			if (!collision(problem, parent.getData(), problem.getGoalState())) {
-				tree.add(new Node<ArmConfig>(parent, problem.getGoalState()));
-				return path(tree.get(tree.size() - 1));
+			Node<ArmConfig> parent1 = adjacent(tree1, problem.getGoalState());
+			Node<ArmConfig> parent2 = adjacent(tree2, problem.getInitialState());
+			if (!collision(problem, parent1.getData(), problem.getGoalState())) {
+				tree1.add(new Node<ArmConfig>(parent1, problem.getGoalState()));
+				return path(tree1.get(tree1.size() - 1));
+			}
+			if (!collision(problem, parent2.getData(), problem.getInitialState())) {
+				tree2.add(new Node<ArmConfig>(parent2, problem.getInitialState()));
+				return reversedPath(tree2.get(tree2.size() - 1));
 			}
 			for (int i = 0; i < MAX_VERTICES; i++) {
-				ArmConfig cfg = getValidSample(problem);
-				parent = adjacent(tree, cfg);
-				List<ArmConfig> path = trial(problem, parent.getData(), cfg);
-				if (!lineCollision(problem, parent.getData(), cfg) && 
+				ArmConfig cfg1 = getValidSample(problem);
+				ArmConfig cfg2 = getValidSample(problem);
+				parent1 = adjacent(tree1, cfg1);
+				parent2 = adjacent(tree2, cfg2);
+				List<ArmConfig> path = trial(problem, parent1.getData(), cfg1);
+				List<ArmConfig> path1 = trial(problem, parent2.getData(), cfg2);
+				if (!lineCollision(problem, parent1.getData(), cfg1) && 
 					!pathHasCollision(problem, path)) {
-					tree.add(new Node<ArmConfig>(parent, cfg));
+					tree1.add(new Node<ArmConfig>(parent1, cfg1));
+				}
+				if (!lineCollision(problem, parent2.getData(), cfg2) && 
+					!pathHasCollision(problem, path1)) {
+					tree2.add(new Node<ArmConfig>(parent2, cfg2));
 				}
 			}
 		}		
@@ -258,6 +294,21 @@ public class RRT {
 		}
 		
 		Collections.reverse(path);
+		return path;
+	}
+	
+	private List<ArmConfig> reversedPath(Node<ArmConfig> initial) {
+		List<ArmConfig> path = new ArrayList<ArmConfig>();
+		Node<ArmConfig> node = initial;
+		path.add(node.getData());
+		
+		while (node != null) {
+			node = node.getParent();
+			if (node != null) {
+				path.add(node.getData());
+			}
+		}
+		
 		return path;
 	}
 	
