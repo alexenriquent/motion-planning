@@ -1,0 +1,5 @@
+joint_0-obs_3.txt 15sec
+joint_3-obs_15.txt 15sec
+joint_6-obs_3.txt 60sec
+joint_5-obs_11.txt 120sec
+
