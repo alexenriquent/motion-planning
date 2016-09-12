@@ -17,13 +17,15 @@ public class Program {
 		
 		double start = System.nanoTime();
 		
+		double s1 = System.nanoTime();
 		List<ArmConfig> path = RRT.search(problem);
+		double f1 = System.nanoTime();
 		List<ArmConfig> interpolatedPath = RRT.primitiveSteps(problem, path);
 		
 		double finish = System.nanoTime();
-		double elapsed = (finish - start) / 10e5;
 		
-		System.out.println("Total: " + elapsed + " ms");
+		System.out.println("Search: " + ((f1 - s1) / 10e5) + " ms");
+		System.out.println("Total: " + ((finish - start) / 10e5) + " ms");
 						
 		problem.setPath(interpolatedPath);
 		problem.saveSolution(args[1]);

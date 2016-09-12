@@ -75,16 +75,26 @@ public class RRT {
 	private boolean collision(ProblemSpec problem, ArmConfig cfg1, ArmConfig cfg2) {
 		List<ArmConfig> path = trial(problem, cfg1, cfg2);
 		Line2D line1 = new Line2D.Double(cfg1.getBaseCenter(), cfg2.getBaseCenter());
-		Line2D line2 = new Line2D.Double(
-			   cfg1.getLinks().get(cfg1.getJointCount() - 1).getP1(), 
-			   cfg2.getLinks().get(cfg1.getJointCount() - 1).getP1());
 		
-		for (Obstacle obstacle : problem.getObstacles()) {
-			Rectangle2D lenientRect = grow(obstacle.getRect(), -MAX_ERROR);
-			if (line1.intersects(lenientRect) ||
-				line2.intersects(lenientRect) ||
-				line1.intersectsLine(line2)) {
-				return true;
+		if (!cfg1.getLinks().isEmpty()) {
+			Line2D line2 = new Line2D.Double(
+					   cfg1.getLinks().get(cfg1.getJointCount() - 1).getP1(), 
+					   cfg2.getLinks().get(cfg1.getJointCount() - 1).getP1());
+			
+			for (Obstacle obstacle : problem.getObstacles()) {
+				Rectangle2D lenientRect = grow(obstacle.getRect(), -MAX_ERROR);
+				if (line1.intersects(lenientRect) ||
+					line2.intersects(lenientRect) ||
+					line1.intersectsLine(line2)) {
+					return true;
+				}
+			}
+		} else {
+			for (Obstacle obstacle : problem.getObstacles()) {
+				Rectangle2D lenientRect = grow(obstacle.getRect(), -MAX_ERROR);
+				if (line1.intersects(lenientRect)) {
+					return true;
+				}
 			}
 		}
 		
