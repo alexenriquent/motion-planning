@@ -32,28 +32,6 @@ public class RRT {
 		lenientBounds = grow(BOUNDS, MAX_ERROR);
 	}
 	
-//	public List<ArmConfig> search(ProblemSpec problem) {
-//		Tree<ArmConfig> tree = new Tree<ArmConfig>();	
-//		tree.add(new Node<ArmConfig>(null, problem.getInitialState()));
-//						
-//		while (true) {
-//			Node<ArmConfig> parent = adjacent(tree, problem.getGoalState());
-//			if (!collision(problem, parent.getData(), problem.getGoalState())) {
-//				tree.add(new Node<ArmConfig>(parent, problem.getGoalState()));
-//				return path(tree.get(tree.size() - 1));
-//			}
-//			for (int i = 0; i < MAX_VERTICES; i++) {
-//				ArmConfig cfg = getValidSample(problem);
-//				parent = adjacent(tree, cfg);
-//				List<ArmConfig> path = trial(problem, parent.getData(), cfg);
-//				if (!lineCollision(problem, parent.getData(), cfg) && 
-//					!pathHasCollision(problem, path)) {
-//					tree.add(new Node<ArmConfig>(parent, cfg));
-//				}
-//			}
-//		}		
-//	}
-	
 	public List<ArmConfig> search(ProblemSpec problem) {
 		Tree<ArmConfig> tree1 = new Tree<ArmConfig>();	
 		tree1.add(new Node<ArmConfig>(null, problem.getInitialState()));
