@@ -17,14 +17,14 @@ public class Program {
 		
 		double start = System.nanoTime();
 		
-		List<ArmConfig> path = RRT.search(problem);
+		List<ArmConfig> path = RRT.RRTconnect(problem);
 		List<ArmConfig> interpolatedPath = RRT.primitiveSteps(problem, path);
 		
 		double finish = System.nanoTime();
 		
-		System.out.println("Total: " + ((finish - start) / 10e5) + " ms");
+		System.out.println(((finish - start) / 10e5) + " ms");
 						
-		problem.setPath(interpolatedPath);
+		problem.setPath(RRT.shortenPath(problem, interpolatedPath));
 		problem.saveSolution(args[1]);
 	}
 }

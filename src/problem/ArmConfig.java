@@ -337,13 +337,13 @@ public class ArmConfig {
             links.add(new Line2D.Double(x2, y2, x3, y3));
 
             // add link for l1
-            x2 = (gripperLengths.get(0) * Math.cos(totalAngle - (Math.PI / 2))) + x1;
-            y2 = (gripperLengths.get(0) * Math.sin(totalAngle - (Math.PI / 2))) + y1;
+            x2 = (gripperLengths.get(2) * Math.cos(totalAngle - (Math.PI / 2))) + x1;
+            y2 = (gripperLengths.get(2) * Math.sin(totalAngle - (Math.PI / 2))) + y1;
             links.add(new Line2D.Double(x1, y1, x2, y2));
 
             // add link for l2
-            x3 = (gripperLengths.get(1) * Math.cos(totalAngle)) + x2;
-            y3 = gripperLengths.get(1) * Math.sin(totalAngle) + y2;
+            x3 = (gripperLengths.get(3) * Math.cos(totalAngle)) + x2;
+            y3 = gripperLengths.get(3) * Math.sin(totalAngle) + y2;
             links.add(new Line2D.Double(x2, y2, x3, y3));
         }
 	}

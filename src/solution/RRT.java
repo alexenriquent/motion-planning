@@ -17,7 +17,7 @@ public class RRT {
 	public static final int MAX_VERTICES = 50;
 	public static final double MAX_ERROR = 1e-5;
 	public static final double INTERPOLATION = 3000.0;
-	public static final double TRIAL_INTERPOLATION = 60.0;
+	public static final double TRIAL_INTERPOLATION = 150.0;
 	public static final double MAX_JOINT_ANGLE = 150 * Math.PI / 180.0;
 	public static final double MAX_JOINT_STEP = 0.1 * Math.PI / 180.0;
 	public static final double MAX_BASE_STEP = 0.001;
@@ -32,7 +32,43 @@ public class RRT {
 		lenientBounds = grow(BOUNDS, MAX_ERROR);
 	}
 	
-	public List<ArmConfig> search(ProblemSpec problem) {
+	public List<ArmConfig> RRTconnect(ProblemSpec problem) {
+		Tree<ArmConfig> tree1 = new Tree<ArmConfig>();	
+		tree1.add(new Node<ArmConfig>(null, problem.getInitialState()));
+		Tree<ArmConfig> tree2 = new Tree<ArmConfig>();	
+		tree2.add(new Node<ArmConfig>(null, problem.getGoalState()));
+						
+		while (true) {
+			Node<ArmConfig> parent1 = adjacent(tree1, tree2.get(tree2.size() - 1).getData());
+			Node<ArmConfig> parent2 = adjacent(tree2, parent1.getData());
+			if (!collision(problem, parent1.getData(), parent2.getData()) ||
+				!collision(problem, parent2.getData(), parent1.getData())) {
+				tree1.add(new Node<ArmConfig>(parent1, parent2.getData()));
+				tree2.add(new Node<ArmConfig>(parent2, parent1.getData()));
+				List<ArmConfig> path = path(tree1.get(tree1.size() - 1));
+				path.addAll(reversedPath(tree2.get(tree2.size() - 1)));
+				return path;
+			}
+			for (int i = 0; i < MAX_VERTICES; i++) {
+				ArmConfig cfg1 = getValidSample(problem);
+				ArmConfig cfg2 = getValidSample(problem);
+				parent1 = adjacent(tree1, cfg1);
+				parent2 = adjacent(tree2, cfg2);
+				List<ArmConfig> path1 = trial(problem, parent1.getData(), cfg1);
+				List<ArmConfig> path2 = trial(problem, parent2.getData(), cfg2);
+				if (!lineCollision(problem, parent1.getData(), cfg1) && 
+					!pathHasCollision(problem, path1)) {
+					tree1.add(new Node<ArmConfig>(parent1, cfg1));
+				}
+				if (!lineCollision(problem, parent2.getData(), cfg2) && 
+					!pathHasCollision(problem, path2)) {
+					tree2.add(new Node<ArmConfig>(parent2, cfg2));
+				}
+			}
+		}		
+	}
+	
+	public List<ArmConfig> RRTbidirectional(ProblemSpec problem) {
 		Tree<ArmConfig> tree1 = new Tree<ArmConfig>();	
 		tree1.add(new Node<ArmConfig>(null, problem.getInitialState()));
 		Tree<ArmConfig> tree2 = new Tree<ArmConfig>();	
@@ -54,15 +90,37 @@ public class RRT {
 				ArmConfig cfg2 = getValidSample(problem);
 				parent1 = adjacent(tree1, cfg1);
 				parent2 = adjacent(tree2, cfg2);
-				List<ArmConfig> path = trial(problem, parent1.getData(), cfg1);
-				List<ArmConfig> path1 = trial(problem, parent2.getData(), cfg2);
+				List<ArmConfig> path1 = trial(problem, parent1.getData(), cfg1);
+				List<ArmConfig> path2 = trial(problem, parent2.getData(), cfg2);
 				if (!lineCollision(problem, parent1.getData(), cfg1) && 
-					!pathHasCollision(problem, path)) {
+					!pathHasCollision(problem, path1)) {
 					tree1.add(new Node<ArmConfig>(parent1, cfg1));
 				}
 				if (!lineCollision(problem, parent2.getData(), cfg2) && 
-					!pathHasCollision(problem, path1)) {
+					!pathHasCollision(problem, path2)) {
 					tree2.add(new Node<ArmConfig>(parent2, cfg2));
+				}
+			}
+		}		
+	}
+	
+	public List<ArmConfig> RRTbasic(ProblemSpec problem) {
+		Tree<ArmConfig> tree = new Tree<ArmConfig>();	
+		tree.add(new Node<ArmConfig>(null, problem.getInitialState()));
+						
+		while (true) {
+			Node<ArmConfig> parent = adjacent(tree, problem.getGoalState());
+			if (!collision(problem, parent.getData(), problem.getGoalState())) {
+				tree.add(new Node<ArmConfig>(parent, problem.getGoalState()));
+				return path(tree.get(tree.size() - 1));
+			}
+			for (int i = 0; i < MAX_VERTICES; i++) {
+				ArmConfig cfg = getValidSample(problem);
+				parent = adjacent(tree, cfg);
+				List<ArmConfig> path = trial(problem, parent.getData(), cfg);
+				if (!lineCollision(problem, parent.getData(), cfg) && 
+					!pathHasCollision(problem, path)) {
+					tree.add(new Node<ArmConfig>(parent, cfg));
 				}
 			}
 		}		
@@ -257,6 +315,35 @@ public class RRT {
 				return cfg;
 			}
 		}
+	}
+	
+	public boolean isValidStep(ArmConfig cfg0, ArmConfig cfg1) {
+		if (cfg0.getJointCount() != cfg1.getJointCount()) {
+			return false;
+		} else if (cfg0.maxAngleDiff(cfg1) > MAX_JOINT_STEP + MAX_ERROR) {
+			return false;
+		} else if (cfg0.maxGripperDiff(cfg1) > MAX_GRIPPER_STEP + MAX_ERROR) {
+			return false;
+		} else if (cfg0.getBaseCenter().distance(cfg1.getBaseCenter()) > MAX_BASE_STEP + MAX_ERROR) {
+			return false;
+		}
+		return true;
+	}
+	
+	public List<ArmConfig> shortenPath(ProblemSpec problem, List<ArmConfig> path) {
+		boolean valid = true;
+		
+		while (valid) {
+			for (int i = 0; i < path.size() - 2; i++) {
+				valid = false;
+				if (isValidStep(path.get(i), path.get(i + 2))) {
+					path.remove(i + 1);
+					i--;
+					valid = true;
+				}
+			}
+		}
+		return path;
 	}
 	
 	private List<ArmConfig> path(Node<ArmConfig> goal) {
