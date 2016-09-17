@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project basedir="." default="build" name="MotionPlanning">
+    <property environment="env"/>
+    <property name="debuglevel" value="source,lines,vars"/>
+    <property name="target" value="1.8"/>
+    <property name="source" value="1.8"/>
+    <path id="MotionPlanning.classpath">
+        <pathelement location="bin"/>
+    </path>
+    <target name="init">
+        <mkdir dir="bin"/>
+        <copy includeemptydirs="false" todir="bin">
+            <fileset dir="src">
+                <exclude name="**/*.launch"/>
+                <exclude name="**/*.java"/>
+            </fileset>
+        </copy>
+    </target>
+    <target name="clean">
+        <delete dir="bin"/>
+    </target>
+    <target depends="clean" name="cleanall"/>
+    <target depends="build-subprojects,build-project,jar" name="build"/>
+    <target name="build-subprojects"/>
+    <target depends="init" name="build-project">
+        <echo message="${ant.project.name}: ${ant.file}"/>
+        <javac debug="true" debuglevel="${debuglevel}" destdir="bin" includeantruntime="false" source="${source}" target="${target}">
+            <src path="src"/>
+            <classpath refid="MotionPlanning.classpath"/>
+        </javac>
+    </target>
+    <target depends="build-project" name="jar">
+        <jar destfile="a2-7702-44522328.jar" filesetmanifest="mergewithoutmain">
+            <manifest>
+                <attribute name="Main-Class" value="solution/Program"/>
+                <attribute name="Class-Path" value="."/>
+            </manifest>
+            <fileset dir="bin"/>
+        </jar>
+    </target>
+    <target description="Build all projects which reference this project. Useful to propagate changes." name="build-refprojects"/>
+    <target name="MotionPlanning">
+        <java classname="MotionPlanning" failonerror="true" fork="yes">
+            <classpath refid="MotionPlanning.classpath"/>
+        </java>
+    </target>
+    <target name="Program (3)">
+        <java classname="solution.Program" failonerror="true" fork="yes">
+            <arg line="/Users/Richardricmn/Repository/GitHub/MotionPlanning/test/joint_5-obs_11.txt&#10;/Users/Richardricmn/Repository/GitHub/MotionPlanning/test/output.txt"/>
+            <classpath refid="MotionPlanning.classpath"/>
+        </java>
+    </target>
+    <target name="Tester">
+        <java classname="tester.Tester" failonerror="true" fork="yes">
+            <arg line="/Users/Richardricmn/Repository/GitHub/MotionPlanning/test/joint_5-obs_11.txt&#10;/Users/Richardricmn/Repository/GitHub/MotionPlanning/test/output.txt"/>
+            <classpath refid="MotionPlanning.classpath"/>
+        </java>
+    </target>
+    <target name="Visualiser">
+        <java classname="visualiser.Visualiser" failonerror="true" fork="yes">
+            <classpath refid="MotionPlanning.classpath"/>
+        </java>
+    </target>
+</project>
