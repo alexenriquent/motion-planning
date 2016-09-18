@@ -17,7 +17,7 @@ public class RRT {
 	public static final int MAX_VERTICES = 50;
 	public static final double MAX_ERROR = 1e-5;
 	public static final double INTERPOLATION = 3000.0;
-	public static final double TRIAL_INTERPOLATION = 150.0;
+	public static final double TRIAL_INTERPOLATION = 250.0;
 	public static final double MAX_JOINT_ANGLE = 150 * Math.PI / 180.0;
 	public static final double MAX_JOINT_STEP = 0.1 * Math.PI / 180.0;
 	public static final double MAX_BASE_STEP = 0.001;
