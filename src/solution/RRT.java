@@ -245,20 +245,28 @@ public class RRT {
 		List<Line2D> links = cfg.getLinks();
 		List<Line2D> chair = cfg.getChair();
 		for (int i = 0; i < links.size(); i++) {
-			if (links.size() - i <= 4) {
-			    for (int j = 0; j < links.size() - 5; j++) {
-                    if (links.get(i).intersectsLine(links.get(j))) {
-                        return true;
-                    }
-                }
-            } else {
-                for (int j = 0; j < i - 1; j++) {
-                    if (links.get(i).intersectsLine(links.get(j))) {
-                        return true;
-                    }
-                }
-            }
-			if (i > 0) {
+			if (cfg.hasGripper()) {
+				if (links.size()-i <= 4) {
+					for (int j = 0; j < links.size()-5; j++) {
+						if (links.get(i).intersectsLine(links.get(j))) {
+							return true;
+						}
+					}
+				} else {
+					for (int j = 0; j < i - 1; j++) {
+						if (links.get(i).intersectsLine(links.get(j))) {
+							return true;
+						}
+					}
+				}
+			} else {
+				for (int j = 0; j < i - 1; j++) {
+					if (links.get(i).intersectsLine(links.get(j))) {
+						return true;
+					}
+				}
+			}
+			if(i > 0) {
 				for(int j = 0; j < 4; j++) {
 					if (links.get(i).intersectsLine(chair.get(j))) {
 						return true;

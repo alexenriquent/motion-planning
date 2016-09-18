@@ -373,22 +373,31 @@ public class Tester {
 		List<Line2D> chair = cfg.getChair();
 		for (int i = 0; i < links.size(); i++) {
 			// check for collision between links
-			if (links.size()-i <= 4) {
-                //check gripper collision with joint links
-			    for (int j = 0; j < links.size()-5; j++) {
-                    if (links.get(i).intersectsLine(links.get(j))) {
-                        return true;
-                    }
-                }
-            } else {
-                //check collision between joint links
-                for (int j = 0; j < i - 1; j++) {
-                    if (links.get(i).intersectsLine(links.get(j))) {
-                        return true;
-                    }
-                }
-            }
-
+			if (cfg.hasGripper()) {
+				//gripper situations
+				if (links.size()-i <= 4) {
+					//check gripper collision with joint links
+					for (int j = 0; j < links.size()-5; j++) {
+						if (links.get(i).intersectsLine(links.get(j))) {
+							return true;
+						}
+					}
+				} else {
+					//check collision between joint links
+					for (int j = 0; j < i - 1; j++) {
+						if (links.get(i).intersectsLine(links.get(j))) {
+							return true;
+						}
+					}
+				}
+			} else {
+				//non-gripper situations
+				for (int j = 0; j < i - 1; j++) {
+					if (links.get(i).intersectsLine(links.get(j))) {
+						return true;
+					}
+				}
+			}
 			// if not first link, check for collision with chair
 			if(i > 0) {
 				for(int j = 0; j < 4; j++) {
@@ -398,7 +407,6 @@ public class Tester {
 				}
 			}
 		}
-
 		return false;
 	}
 
